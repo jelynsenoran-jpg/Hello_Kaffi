@@ -40,13 +40,35 @@ async function api(path, opts = {}) {
 }
 function toast(m) { const t = $('#toast'); if (!t) return; t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2800); }
 function beep() { try { const c = new AudioContext(), o = c.createOscillator(); o.connect(c.destination); o.frequency.value = 880; o.start(); o.stop(c.currentTime + .15); } catch (e) {} }
-function connect(onMsg) {
-    const wsUrl = `wss://hello-kaffi-backend.onrender.com/ws${location.search}`;
-    const ws = new WebSocket(wsUrl); // <-- SIGURADUHING NAKALAGAY ITO!
+let ws, wsPing;
 
-    ws.onopen = () => { $('#live').textContent = 'Live'; $('#live').classList.add('on'); };
-    ws.onmessage = e => onMsg(JSON.parse(e.data));
-    ws.onclose = () => { $('#live').textContent = 'Reconnecting...'; $('#live').classList.remove('on'); setTimeout(() => connect(onMsg), 3000); };
+function connect(onMsg) {
+  const wsUrl = `wss://hello-kaffi-backend.onrender.com/ws${location.search}`;
+  ws = new WebSocket(wsUrl);
+
+  ws.onopen = () => {
+    $('#live').textContent = 'Live';
+    $('#live').classList.add('on');
+    // Mag-send ng heartbeat ping bawat 25 seconds para hindi mag-timeout ang Render connection
+    clearInterval(wsPing);
+    wsPing = setInterval(() => {
+      if (ws.readyState === 1) ws.send(JSON.stringify({ type: 'ping' }));
+    }, 25000);
+  };
+
+  ws.onmessage = e => {
+    const data = JSON.parse(e.data);
+    if (data.type === 'pong') return; // Ignore ping response
+    onMsg(data);
+  };
+
+  ws.onclose = () => {
+    $('#live').textContent = 'Reconnecting…';
+    $('#live').classList.remove('on');
+    clearInterval(wsPing);
+    // Mabilis na auto-reconnect pagkatapos ng 2 seconds
+    setTimeout(() => connect(onMsg), 2000);
+  };
 }
 function guard(role) {
   const loginPage = role + '-login.html';
