@@ -38,8 +38,9 @@ async function api(path, opts = {}) {
   if (!r.ok) throw Object.assign(new Error(d.error || 'Request failed'), { status: r.status });
   return d;
 }
-function toast(m) { const t = $('#toast'); if (!t) return; t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2800); }
-function beep() { try { const c = new AudioContext(), o = c.createOscillator(); o.connect(c.destination); o.frequency.value = 880; o.start(); o.stop(c.currentTime + .15); } catch (e) {} }
+function toast(m) { const t = $('#toast'); if (!t) return; t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+function beep() { try { const c = new AudioContext(), o = c.createOscillator(); o.connect(c.destination); o.start(); o.stop(c.currentTime + 0.1); } catch (_) {} }
+
 let ws, wsPing;
 
 function connect(onMsg) {
@@ -47,9 +48,8 @@ function connect(onMsg) {
   ws = new WebSocket(wsUrl);
 
   ws.onopen = () => {
-    $('#live').textContent = 'Live';
-    $('#live').classList.add('on');
-    // Mag-send ng heartbeat ping bawat 25 seconds para hindi mag-timeout ang Render connection
+    const live = $('#live');
+    if (live) { live.textContent = 'Live'; live.classList.add('on'); }
     clearInterval(wsPing);
     wsPing = setInterval(() => {
       if (ws.readyState === 1) ws.send(JSON.stringify({ type: 'ping' }));
@@ -57,16 +57,17 @@ function connect(onMsg) {
   };
 
   ws.onmessage = e => {
-    const data = JSON.parse(e.data);
-    if (data.type === 'pong') return; // Ignore ping response
-    onMsg(data);
+    try {
+      const data = JSON.parse(e.data);
+      if (data.type === 'pong') return;
+      onMsg(data);
+    } catch (_) {}
   };
 
   ws.onclose = () => {
-    $('#live').textContent = 'Reconnecting…';
-    $('#live').classList.remove('on');
+    const live = $('#live');
+    if (live) { live.textContent = 'Reconnecting…'; live.classList.remove('on'); }
     clearInterval(wsPing);
-    // Mabilis na auto-reconnect pagkatapos ng 2 seconds
     setTimeout(() => connect(onMsg), 2000);
   };
 }
