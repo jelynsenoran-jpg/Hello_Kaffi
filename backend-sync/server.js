@@ -22,9 +22,13 @@ const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
 
 // Firebase Admin: verifies Google ID tokens. Put your service account key at backend-sync/serviceAccountKey.json
-try { admin.initializeApp({ credential: admin.credential.cert(require('./serviceAccountKey.json')) }); }
+try {
+  const serviceAccountPath = fs.existsSync(path.join(__dirname, 'serviceAccountKey.json'))
+    ? path.join(__dirname, 'serviceAccountKey.json')
+    : '/etc/secrets/serviceAccountKey.json';
+  admin.initializeApp({ credential: admin.credential.cert(require(serviceAccountPath)) });
+}
 catch (e) { console.error('\n[!] Missing/invalid backend-sync/serviceAccountKey.json - Google sign-in will not work until it is added.\n'); }
-
 const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, 'db.json');
 const MAX_PROOF_ATTEMPTS = 2;   // customer may send the GCash proof twice (1 retry)
