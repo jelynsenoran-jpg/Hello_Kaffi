@@ -166,10 +166,14 @@ wss.on('connection', (ws, req) => {
 });
 function broadcast(msg, orderEmail) {
   const data = JSON.stringify(msg);
+  const targetEmail = orderEmail ? String(orderEmail).toLowerCase() : null;
   wss.clients.forEach(c => {
     if (c.readyState !== 1 || !c.user) return;
     const staff = c.user.role !== 'customer';
-    if (msg.type === 'menu' || staff || c.user.email === orderEmail) c.send(data);
+    const userEmail = c.user.email ? String(c.user.email).toLowerCase() : null;
+    if (msg.type === 'menu' || staff || (targetEmail && userEmail === targetEmail)) {
+      c.send(data);
+    }
   });
 }
 
