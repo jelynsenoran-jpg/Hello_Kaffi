@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "https://hello-kaffi-backend.onrender.com/api/$1"
+    },
+    {
       "source": "/pos/(.*)",
       "destination": "/pos-admin-portal/$1"
     }
