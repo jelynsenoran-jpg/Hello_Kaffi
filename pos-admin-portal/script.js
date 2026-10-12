@@ -59,12 +59,14 @@ const NEXT = { Pending: 'Preparing', Preparing: 'Ready', Ready: 'Completed' };
 const setStatus = (id, status) => api(`/orders/${id}/status`, { method: 'PATCH', body: { status } });
 async function advance(id) {
   const o = orders.find(x => x.id === id); if (!o) return;
+  const next = NEXT[o.status]; if (!next) return;
   try {
-    let st = o.status;
-    if (st === 'Pending') { await setStatus(id, 'Preparing'); st = 'Preparing'; }   // (online COD uses its own 'Mark as received' button)   // safety: accept first if it somehow is still Pending
-    if (st === 'Ready' && o.type === 'delivery' && !o.dispatched) { await api(`/orders/${id}/dispatch`, { method: 'PATCH' }); return; }   // rider leaves with the order
-    await setStatus(id, NEXT[st]);   // pickup: Completed | delivery that is out: Delivered (= Completed, frees the rider)
-  } catch (e) { toast(e.message); }
+    const updated = await setStatus(id, next);
+    upsert(updated);
+    if (typeof renderBoard === 'function') renderBoard(); // <-- ITO ANG MAGLILIPAT AGAD NG CARD SA CASHIER BOARD!
+  } catch (e) {
+    toast(e.message);
+  }
 }
 
 /* ===== LOGIN ===== */
