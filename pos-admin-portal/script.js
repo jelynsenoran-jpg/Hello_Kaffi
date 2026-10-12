@@ -41,11 +41,12 @@ async function api(path, opts = {}) {
 function toast(m) { const t = $('#toast'); if (!t) return; t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2800); }
 function beep() { try { const c = new AudioContext(), o = c.createOscillator(); o.connect(c.destination); o.frequency.value = 880; o.start(); o.stop(c.currentTime + .15); } catch (e) {} }
 function connect(onMsg) {
-  const wsUrl = `wss://hello-kaffi-backend.onrender.com/ws${location.search}`;
-// O kung anuman ang eksaktong route ng websocket niyo
-  ws.onopen = () => { $('#live').textContent = 'Live'; $('#live').classList.add('on'); };
-  ws.onmessage = e => onMsg(JSON.parse(e.data));
-  ws.onclose = () => { $('#live').textContent = 'Reconnecting…'; $('#live').classList.remove('on'); setTimeout(() => connect(onMsg), 2000); };
+    const wsUrl = `wss://hello-kaffi-backend.onrender.com/ws${location.search}`;
+    const ws = new WebSocket(wsUrl); // <-- SIGURADUHING NAKALAGAY ITO!
+
+    ws.onopen = () => { $('#live').textContent = 'Live'; $('#live').classList.add('on'); };
+    ws.onmessage = e => onMsg(JSON.parse(e.data));
+    ws.onclose = () => { $('#live').textContent = 'Reconnecting...'; $('#live').classList.remove('on'); setTimeout(() => connect(onMsg), 3000); };
 }
 function guard(role) {
   const loginPage = role + '-login.html';
