@@ -2,14 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Hello Kaffi Portals</title>
+    <title>Hello Kaffi - Redirecting...</title>
+    <script>
+        // Automatic redirect agad sa Customer Portal pag-open ng website
+        window.location.replace("./customer-portal/");
+
+        // Shortcut listener para sa Alt + A papuntang POS Admin Portal
+        window.addEventListener('keydown', function(event) {
+            if (event.altKey && (event.key === 'a' || event.key === 'A')) {
+                event.preventDefault();
+                window.location.href = "./pos-admin-portal/";
+            }
+        });
+    </script>
 </head>
-<body style="font-family: sans-serif; text-align: center; padding-top: 50px;">
-    <h1>Welcome to Hello Kaffi</h1>
-    <p>Select a portal:</p>
-    <div style="margin-top: 20px;">
-        <a href="./customer-portal/" style="padding: 10px 20px; background: #6f4e37; color: white; text-decoration: none; border-radius: 5px;">Customer Portal</a>
-        <a href="./pos-admin-portal/" style="padding: 10px 20px; background: #333; color: white; text-decoration: none; border-radius: 5px; margin-left: 10px;">POS Admin Portal</a>
-    </div>
+<body style="font-family: sans-serif; text-align: center; padding-top: 50px; background: #f9f9f9;">
+    <p>Redirecting to Customer Portal...</p>
+    <p><small>Tip: Press <b>Alt + A</b> to go to POS Admin Portal.</small></p>
 </body>
 </html>
