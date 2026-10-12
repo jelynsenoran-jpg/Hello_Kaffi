@@ -310,15 +310,22 @@ async function start() {
   renderAll(); connect(); refreshCod();
 }
 function connect() {
-  ws = new WebSocket((location.protocol === 'https:' ? 'wss' : 'ws') + '://' + WS_HOST + '/ws?token=' + session.token);
+  const wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
+  // Direktang ituro sa Render backend WSS endpoint kapag live sa Vercel o iba ang host
+  const wsUrl = DEV 
+    ? `${wsProtocol}://${WS_HOST}/ws?token=${session.token}` 
+    : `wss://hello-kaffi-backend.onrender.com/ws?token=${session.token}`;
+
+  ws = new WebSocket(wsUrl);
+
   ws.onmessage = e => {
     const m = JSON.parse(e.data);
     if (m.type === 'menu') { menu = m.menu; renderMenu(); renderCart(); }
     if (m.type === 'order') {
       const i = orders.findIndex(o => o.id === m.order.id), before = i < 0 ? null : trackMsg(orders[i]);
       i < 0 ? orders.unshift(m.order) : orders[i] = m.order;
-      if (!m.isNew && before !== trackMsg(m.order)) toast(`Order #${m.order.id}: ${trackMsg(m.order)}`);   // only when something actually changed
-      renderOrders();
+      if (!m.isNew && before !== trackMsg(m.order)) toast(`Order #${m.order.id}: ${trackMsg(m.order)}`);
+      renderOrders(); // Automatic na nag-a-update ang status sa customer screen sa real-time!
     }
   };
   ws.onclose = () => setTimeout(() => session && connect(), 2000);
